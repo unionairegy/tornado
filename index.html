@@ -1,0 +1,474 @@
+from pathlib import Path
+import re
+
+base = Path("/mnt/data")
+
+html = r'''<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>صيانة تورنيدو | مركز صيانة أجهزة تورنيدو</title>
+  <meta name="description" content="مركز صيانة تورنيدو لخدمات صيانة وإصلاح أجهزة تورنيدو المنزلية في القاهرة والجيزة والإسكندرية: ثلاجات، غسالات، تكييفات، ديب فريزر، شاشات، ميكروويف، سخانات، أفران، بوتاجازات، غسالات أطباق ومجففات.">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+
+  <link rel="canonical" href="https://tornado.maintenance-eg.net/">
+
+  <meta property="og:locale" content="ar_EG">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="صيانة تورنيدو | مركز صيانة أجهزة تورنيدو">
+  <meta property="og:description" content="خدمات صيانة وإصلاح أجهزة تورنيدو المنزلية بالقاهرة والجيزة والإسكندرية.">
+  <meta property="og:url" content="https://tornado.maintenance-eg.net/">
+  <meta property="og:site_name" content="مركز صيانة تورنيدو">
+
+  <style>
+    :root{
+      --red:#c9151e;
+      --red2:#a80f17;
+      --dark:#171717;
+      --muted:#626262;
+      --bg:#f6f7f9;
+      --card:#fff;
+      --line:#e8e8e8;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Tahoma,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--dark);
+      line-height:1.9;
+    }
+    img{max-width:100%;display:block}
+    .wrap{max-width:1160px;margin:auto;padding:0 18px}
+
+    header{
+      background:rgba(255,255,255,.97);
+      border-bottom:1px solid var(--line);
+      position:sticky;
+      top:0;
+      z-index:20;
+      backdrop-filter:blur(10px);
+    }
+    .top{
+      min-height:72px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+    }
+    .brand{
+      font-size:24px;
+      font-weight:900;
+      color:var(--red);
+      white-space:nowrap;
+    }
+    nav{display:flex;flex-wrap:wrap;gap:16px}
+    nav a{color:#333;text-decoration:none;font-size:14px;font-weight:700}
+    nav a:hover{color:var(--red)}
+
+    .hero{
+      padding:46px 0 26px;
+      background:linear-gradient(135deg,#fff 0%,#fafafa 52%,#f0f1f3 100%);
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:28px;
+      align-items:center;
+    }
+    .hero h1{
+      font-size:44px;
+      line-height:1.35;
+      margin:0 0 16px;
+      letter-spacing:-.4px;
+    }
+    .hero h1 span{color:var(--red)}
+    .hero p{
+      color:var(--muted);
+      font-size:18px;
+      margin:0 0 20px;
+    }
+    .chips{display:flex;flex-wrap:wrap;gap:9px}
+    .chip{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:7px 13px;
+      font-size:13px;
+      font-weight:700;
+      box-shadow:0 3px 12px rgba(0,0,0,.03);
+    }
+    .hero-photo{
+      border-radius:20px;
+      overflow:hidden;
+      box-shadow:0 16px 38px rgba(0,0,0,.13);
+      border:1px solid #ddd;
+      background:#fff;
+    }
+    .hero-photo img{
+      width:100%;
+      height:390px;
+      object-fit:cover;
+    }
+
+    section{padding:46px 0}
+    h2{
+      font-size:30px;
+      margin:0 0 8px;
+      line-height:1.4;
+    }
+    .section-lead{
+      margin:0 0 22px;
+      color:var(--muted);
+      max-width:900px;
+    }
+
+    .service-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+    }
+    .service-card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:21px;
+      box-shadow:0 6px 22px rgba(0,0,0,.035);
+    }
+    .service-card h3{
+      margin:0 0 7px;
+      color:var(--red);
+      font-size:18px;
+    }
+    .service-card p{margin:0;color:#555;font-size:14px}
+
+    .gallery-section{background:#fff;border-block:1px solid var(--line)}
+    .gallery{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+    }
+    .gallery figure{
+      margin:0;
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+      background:#fff;
+      box-shadow:0 5px 18px rgba(0,0,0,.04);
+    }
+    .gallery img{
+      width:100%;
+      height:255px;
+      object-fit:cover;
+      background:#eee;
+    }
+    .gallery figcaption{
+      padding:12px 14px;
+      font-weight:800;
+      font-size:14px;
+      color:#333;
+    }
+
+    .areas{
+      background:linear-gradient(135deg,#1d1d1d,#2c2c2c);
+      color:#fff;
+    }
+    .areas h2{color:#fff}
+    .areas .section-lead{color:#ddd}
+    .area-list{display:flex;flex-wrap:wrap;gap:10px}
+    .area-list span{
+      background:#fff;
+      color:#222;
+      border-radius:10px;
+      padding:9px 15px;
+      font-weight:800;
+      font-size:14px;
+    }
+
+    .map-box{
+      overflow:hidden;
+      border-radius:18px;
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:0 8px 28px rgba(0,0,0,.08);
+    }
+    iframe{
+      width:100%;
+      height:500px;
+      display:block;
+      border:0;
+    }
+
+    .faq{
+      display:grid;
+      gap:12px;
+    }
+    details{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:14px 16px;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:800;
+      color:#222;
+    }
+    details p{margin:9px 0 0;color:#555}
+
+    footer{
+      padding:32px 0;
+      text-align:center;
+      color:#777;
+      font-size:14px;
+      background:#fff;
+      border-top:1px solid var(--line);
+    }
+
+    @media(max-width:900px){
+      .hero-grid{grid-template-columns:1fr}
+      .hero-photo img{height:330px}
+      .service-grid,.gallery{grid-template-columns:1fr 1fr}
+      .hero h1{font-size:36px}
+    }
+    @media(max-width:620px){
+      nav{display:none}
+      .hero{padding-top:32px}
+      .hero h1{font-size:29px}
+      .hero p{font-size:16px}
+      .service-grid,.gallery{grid-template-columns:1fr}
+      .gallery img{height:245px}
+      iframe{height:390px}
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"LocalBusiness",
+    "@id":"https://tornado.maintenance-eg.net/#business",
+    "name":"مركز صيانة تورنيدو",
+    "url":"https://tornado.maintenance-eg.net/",
+    "description":"خدمات فحص وصيانة وإصلاح أجهزة تورنيدو المنزلية في القاهرة والجيزة والإسكندرية.",
+    "areaServed":[
+      {"@type":"City","name":"القاهرة"},
+      {"@type":"City","name":"الجيزة"},
+      {"@type":"City","name":"الإسكندرية"}
+    ],
+    "hasMap":"https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d110479.21316946154!2d31.48695482403194!3d30.080568000990418!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14583f2de2550c69%3A0xeca38ff7bb9cb381!2z2LXZitin2YbYSDYqtmD2YrZitmBINin2YQg2KzZig!5e0!3m2!1sar!2seg!4v1789225016259!5m2!1sar!2seg",
+    "knowsAbout":[
+      "صيانة تورنيدو",
+      "صيانة ثلاجات تورنيدو",
+      "صيانة غسالات تورنيدو",
+      "صيانة تكييف تورنيدو",
+      "صيانة ديب فريزر تورنيدو",
+      "صيانة شاشات تورنيدو",
+      "صيانة ميكروويف تورنيدو",
+      "صيانة سخانات تورنيدو",
+      "صيانة بوتاجازات تورنيدو",
+      "صيانة أفران تورنيدو",
+      "صيانة غسالات أطباق تورنيدو",
+      "صيانة مجففات تورنيدو"
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"FAQPage",
+    "mainEntity":[
+      {
+        "@type":"Question",
+        "name":"ما الأجهزة التي تشملها خدمات صيانة تورنيدو؟",
+        "acceptedAnswer":{"@type":"Answer","text":"تشمل الخدمات الثلاجات والغسالات والتكييفات والديب فريزر والشاشات والميكروويف والسخانات والأفران والبوتاجازات وغسالات الأطباق والمجففات."}
+      },
+      {
+        "@type":"Question",
+        "name":"ما مناطق خدمة صيانة تورنيدو؟",
+        "acceptedAnswer":{"@type":"Answer","text":"تشمل مناطق الخدمة القاهرة والجيزة والإسكندرية والمناطق المحيطة وفق نطاق التغطية المتاح."}
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+
+<header>
+  <div class="wrap top">
+    <div class="brand">مركز صيانة تورنيدو</div>
+    <nav aria-label="التنقل الرئيسي">
+      <a href="#services">الخدمات</a>
+      <a href="#gallery">صور الصيانة</a>
+      <a href="#areas">مناطق الخدمة</a>
+      <a href="#map">الخريطة</a>
+      <a href="#faq">الأسئلة الشائعة</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <h1>مركز <span>صيانة تورنيدو</span> للأجهزة المنزلية</h1>
+        <p>
+          خدمات فحص وصيانة وإصلاح أجهزة تورنيدو المنزلية، وتشخيص الأعطال الكهربائية والميكانيكية
+          لمجموعة واسعة من الأجهزة في القاهرة والجيزة والإسكندرية.
+        </p>
+        <div class="chips">
+          <span class="chip">صيانة ثلاجات تورنيدو</span>
+          <span class="chip">صيانة غسالات تورنيدو</span>
+          <span class="chip">صيانة تكييف تورنيدو</span>
+          <span class="chip">صيانة شاشات تورنيدو</span>
+          <span class="chip">صيانة ديب فريزر تورنيدو</span>
+        </div>
+      </div>
+      <div class="hero-photo">
+        <img src="a_clean_commercial_realistic_photo_cgi_style_ser.png"
+             alt="فني صيانة تورنيدو مع مجموعة من أجهزة تورنيدو المنزلية"
+             width="1200" height="900" fetchpriority="high">
+      </div>
+    </div>
+  </section>
+
+  <section id="services">
+    <div class="wrap">
+      <h2>خدمات صيانة تورنيدو</h2>
+      <p class="section-lead">
+        نقدم خدمات الصيانة والفحص لمختلف أجهزة تورنيدو المنزلية مع التركيز على تحديد سبب العطل
+        وإجراء أعمال الإصلاح والصيانة المناسبة لكل جهاز.
+      </p>
+      <div class="service-grid">
+        <article class="service-card"><h3>صيانة ثلاجات تورنيدو</h3><p>فحص أعطال التبريد والتجميد والمكونات الكهربائية.</p></article>
+        <article class="service-card"><h3>صيانة غسالات تورنيدو</h3><p>صيانة الغسالات الأوتوماتيك والفوق أوتوماتيك وتشخيص الأعطال.</p></article>
+        <article class="service-card"><h3>صيانة تكييف تورنيدو</h3><p>فحص مشاكل التبريد والتشغيل والمكونات الداخلية.</p></article>
+        <article class="service-card"><h3>صيانة ديب فريزر تورنيدو</h3><p>تشخيص ضعف التجميد وأعطال التشغيل والمشكلات الكهربائية.</p></article>
+        <article class="service-card"><h3>صيانة شاشات تورنيدو</h3><p>فحص أعطال الصورة والصوت والتشغيل ومكونات الشاشة.</p></article>
+        <article class="service-card"><h3>صيانة ميكروويف تورنيدو</h3><p>فحص أعطال التسخين والتشغيل والدوائر الكهربائية.</p></article>
+        <article class="service-card"><h3>صيانة سخانات تورنيدو</h3><p>تشخيص أعطال التسخين والتشغيل والمكونات الداخلية.</p></article>
+        <article class="service-card"><h3>صيانة أفران وبوتاجازات تورنيدو</h3><p>فحص أعطال التشغيل والتسخين والمكونات المختلفة.</p></article>
+        <article class="service-card"><h3>صيانة غسالات الأطباق والمجففات</h3><p>صيانة أعطال التشغيل والتصريف والتجفيف.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section id="gallery" class="gallery-section">
+    <div class="wrap">
+      <h2>صور خدمات صيانة أجهزة تورنيدو</h2>
+      <p class="section-lead">
+        صور توضيحية لخدمات صيانة وإصلاح مجموعة من أجهزة تورنيدو المنزلية.
+      </p>
+
+      <div class="gallery">
+        <figure>
+          <img src="professional_refrigerator_repair_in_modern_kitchen.png" alt="فني صيانة ثلاجات تورنيدو" loading="lazy">
+          <figcaption>صيانة ثلاجات تورنيدو</figcaption>
+        </figure>
+        <figure>
+          <img src="professional_washing_machine_repair.png" alt="فني صيانة غسالات تورنيدو" loading="lazy">
+          <figcaption>صيانة غسالات تورنيدو</figcaption>
+        </figure>
+        <figure>
+          <img src="professional_ac_maintenance_indoors.png" alt="فني صيانة تكييف تورنيدو" loading="lazy">
+          <figcaption>صيانة تكييف تورنيدو</figcaption>
+        </figure>
+        <figure>
+          <img src="technician_repairing_tornado_freezer.png" alt="فني صيانة ديب فريزر تورنيدو" loading="lazy">
+          <figcaption>صيانة ديب فريزر تورنيدو</figcaption>
+        </figure>
+        <figure>
+          <img src="home_tv_repair_with_toolbox_and_scenic_display.png" alt="فني صيانة شاشات تورنيدو" loading="lazy">
+          <figcaption>صيانة شاشات تورنيدو</figcaption>
+        </figure>
+        <figure>
+          <img src="microwave_repair_in_a_modern_kitchen.png" alt="فني صيانة ميكروويف تورنيدو" loading="lazy">
+          <figcaption>صيانة ميكروويف تورنيدو</figcaption>
+        </figure>
+        <figure>
+          <img src="technician_repairing_tornado_water_heater.png" alt="فني صيانة سخانات تورنيدو" loading="lazy">
+          <figcaption>صيانة سخانات تورنيدو</figcaption>
+        </figure>
+        <figure>
+          <img src="technician_servicing_tornado_gas_range.png" alt="فني صيانة بوتاجازات وأفران تورنيدو" loading="lazy">
+          <figcaption>صيانة بوتاجازات وأفران تورنيدو</figcaption>
+        </figure>
+        <figure>
+          <img src="technician_repairing_a_tornado_dishwasher.png" alt="فني صيانة غسالات أطباق تورنيدو" loading="lazy">
+          <figcaption>صيانة غسالات أطباق تورنيدو</figcaption>
+        </figure>
+        <figure>
+          <img src="technician_repairing_a_tornado_dryer.png" alt="فني صيانة مجففات تورنيدو" loading="lazy">
+          <figcaption>صيانة مجففات تورنيدو</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="areas" class="areas">
+    <div class="wrap">
+      <h2>مناطق خدمة صيانة تورنيدو</h2>
+      <p class="section-lead">
+        تغطية خدمات الصيانة في المدن التالية والمناطق المحيطة بها وفق نطاق الخدمة المتاح.
+      </p>
+      <div class="area-list">
+        <span>صيانة تورنيدو القاهرة</span>
+        <span>صيانة تورنيدو الجيزة</span>
+        <span>صيانة تورنيدو الإسكندرية</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="map">
+    <div class="wrap">
+      <h2>مركز صيانة تورنيدو على الخريطة</h2>
+      <p class="section-lead">
+        الخريطة المضمنة مرتبطة ببيانات موقع مركز صيانة تورنيدو التي تم توفيرها.
+      </p>
+      <div class="map-box">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d110479.21316946154!2d31.48695482403194!3d30.080568000990418!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14583f2de2550c69%3A0xeca38ff7bb9cb381!2z2LXZitin2YbYSDYqtmD2YrZitmBINin2YQg2KzZig!5e0!3m2!1sar!2seg!4v1789225016259!5m2!1sar!2seg"
+          width="600"
+          height="450"
+          style="border:0;"
+          allowfullscreen
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          title="مركز صيانة تورنيدو على خرائط Google">
+        </iframe>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <h2>أسئلة شائعة عن صيانة تورنيدو</h2>
+      <div class="faq">
+        <details>
+          <summary>ما الأجهزة التي تشملها خدمات صيانة تورنيدو؟</summary>
+          <p>تشمل الثلاجات والغسالات والتكييفات والديب فريزر والشاشات والميكروويف والسخانات والأفران والبوتاجازات وغسالات الأطباق والمجففات.</p>
+        </details>
+        <details>
+          <summary>ما مناطق خدمة صيانة تورنيدو؟</summary>
+          <p>تشمل مناطق الخدمة القاهرة والجيزة والإسكندرية والمناطق المحيطة، وفق نطاق التغطية المتاح.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">مركز صيانة تورنيدو — صيانة وإصلاح الأجهزة المنزلية</div>
+</footer>
+
+</body>
+</html>'''
+
+out = base / "tornado_preview_with_images_map.html"
+out.write_text(html, encoding="utf-8")
+
+print(f"Created: {out}")
