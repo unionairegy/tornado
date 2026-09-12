@@ -1,83 +1,50 @@
 from pathlib import Path
-import re
+import shutil, zipfile, re, os
 
-src = Path("/mnt/data/tornado_preview_with_images_map.html")
-dst = Path("/mnt/data/tornado_final_with_phone.html")
+base = Path("/mnt/data")
+src = base / "tornado_final_with_phone.html"
+deploy_dir = base / "tornado_vercel_ready"
 
+if deploy_dir.exists():
+    shutil.rmtree(deploy_dir)
+deploy_dir.mkdir(parents=True)
+
+# Copy the clean HTML as index.html
 html = src.read_text(encoding="utf-8")
-phone_display = "01288232347"
-phone_tel = "+201288232347"
 
-# 1) Add phone styles before the first media query.
-style_insert = """
-    .phone-link{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      background:var(--red);
-      color:#fff !important;
-      text-decoration:none;
-      font-weight:900;
-      border-radius:999px;
-      padding:10px 17px;
-      box-shadow:0 6px 16px rgba(201,21,30,.18);
-      direction:ltr;
-      white-space:nowrap;
-    }
-    .phone-link:hover{background:var(--red2)}
-    .hero-phone{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      margin-top:20px;
-      background:var(--red);
-      color:#fff;
-      text-decoration:none;
-      font-size:21px;
-      font-weight:900;
-      border-radius:12px;
-      padding:11px 20px;
-      direction:ltr;
-      box-shadow:0 8px 20px rgba(201,21,30,.18);
-    }
-"""
-html = html.replace("    @media(max-width:900px){", style_insert + "\n    @media(max-width:900px){", 1)
+# Safety check: make sure no Python script text leaked into the HTML.
+bad_markers = ["from pathlib import", "html.replace(", "dst.write_text(", "phone_display ="]
+for marker in bad_markers:
+    if marker in html:
+        raise RuntimeError(f"Unexpected script text found in HTML: {marker}")
 
-# 2) Add phone button to nav/header.
-html = html.replace(
-    '<a href="#faq">الأسئلة الشائعة</a>\n    </nav>',
-    f'<a href="#faq">الأسئلة الشائعة</a>\n      <a class="phone-link" href="tel:{phone_tel}" aria-label="اتصل بمركز صيانة تورنيدو">{phone_display}</a>\n    </nav>',
-    1
-)
+index_path = deploy_dir / "index.html"
+index_path.write_text(html, encoding="utf-8")
 
-# 3) Add a prominent call button in hero under the chips.
-html = html.replace(
-    """        </div>
-      </div>
-      <div class="hero-photo">""",
-    f"""        </div>
-        <a class="hero-phone" href="tel:{phone_tel}" aria-label="اتصل الآن بمركز صيانة تورنيدو">{phone_display}</a>
-      </div>
-      <div class="hero-photo">""",
-    1
-)
+# Copy every image referenced by the page.
+image_names = re.findall(r'<img[^>]+src="([^"]+)"', html)
+copied = []
+missing = []
 
-# 4) Add telephone to LocalBusiness schema if not already there.
-html = html.replace(
-    '"url":"https://tornado.maintenance-eg.net/",\n    "description"',
-    f'"url":"https://tornado.maintenance-eg.net/",\n    "telephone":"{phone_tel}",\n    "description"',
-    1
-)
+for name in sorted(set(image_names)):
+    src_img = base / name
+    if src_img.exists():
+        shutil.copy2(src_img, deploy_dir / name)
+        copied.append(name)
+    else:
+        missing.append(name)
 
-# 5) Add the number to the footer.
-html = html.replace(
-    "مركز صيانة تورنيدو — صيانة وإصلاح الأجهزة المنزلية",
-    f'مركز صيانة تورنيدو — صيانة وإصلاح الأجهزة المنزلية — <a href="tel:{phone_tel}" style="color:#c9151e;font-weight:900;text-decoration:none;direction:ltr;display:inline-block">{phone_display}</a>',
-    1
-)
+# Create a ZIP ready to upload/deploy.
+zip_path = base / "tornado_vercel_ready.zip"
+if zip_path.exists():
+    zip_path.unlink()
 
-dst.write_text(html, encoding="utf-8")
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
+    for p in sorted(deploy_dir.iterdir()):
+        z.write(p, arcname=p.name)
 
-print(f"Updated file created: {dst}")
-print(f"Phone added visibly and to LocalBusiness schema: {phone_display}")
+print("جاهز للرفع على Vercel/GitHub")
+print("index.html:", index_path)
+print("ZIP:", zip_path)
+print("عدد الصور المرفقة:", len(copied))
+print("صور ناقصة:", missing if missing else "لا يوجد")
